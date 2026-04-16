@@ -26,7 +26,7 @@ def trim(text, max_chars=2500):
 
 def call_groq(prompt):
     response = client.chat.completions.create(
-        model="llama3-70b-versatile",
+        model="groq/compound",
         messages=[
             {"role": "system", "content": "You are a world-class freelance proposal writer."},
             {"role": "user", "content": prompt}
