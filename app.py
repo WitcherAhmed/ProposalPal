@@ -39,7 +39,7 @@ with col2:
 # -------------------------
 def call_groq(prompt):
     response = client.chat.completions.create(
-        model="llama3-8b-8192",  # powerful + free tier
+        model="groq/compound",  # powerful + free tier
         messages=[
             {"role": "system", "content": "You are a helpful assistant"},
             {"role": "user", "content": prompt}
