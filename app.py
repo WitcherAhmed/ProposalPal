@@ -1,43 +1,19 @@
 import streamlit as st
-from groq import Groq
+from langchain_ollama import OllamaLLM
 from datetime import datetime
 
-# -------------------------
-# GROQ CLIENT
-# -------------------------
-client = Groq(api_key=st.secrets["GROQ_API_KEY"])
+model = OllamaLLM(model="llama3")
 
-# -------------------------
-# PAGE CONFIG
-# -------------------------
+
 st.set_page_config(
-    page_title="ProposalPal v4",
+    page_title="ProposalPal v3",
     page_icon="🚀",
     layout="centered"
 )
 
-st.title("🚀 ProposalPal v4 - Stable Freelance Proposal Generator")
+st.title("🚀 ProposalPal v3 - Smart Freelance Proposals")
 
-# -------------------------
-# HELPERS
-# -------------------------
-def trim(text, max_chars=2500):
-    return text[:max_chars] if text else ""
 
-def call_groq(prompt):
-    response = client.chat.completions.create(
-        model="groq/compound",
-        messages=[
-            {"role": "system", "content": "You are a world-class freelance proposal writer."},
-            {"role": "user", "content": prompt}
-        ],
-        temperature=0.7
-    )
-    return response.choices[0].message.content
-
-# -------------------------
-# INPUTS
-# -------------------------
 resume = st.text_area("📄 Paste Your Resume", height=200)
 job_desc = st.text_area("💼 Paste Job Description", height=200)
 
@@ -55,82 +31,122 @@ with col2:
         placeholder="e.g. $200 - $500"
     )
 
-# -------------------------
-# GENERATION PROMPT
-# -------------------------
-def generate_proposal(resume, job_desc, tone, budget):
-    today = datetime.today().strftime("%B %d, %Y")
 
-    prompt = f"""
-You are ProposalPal, an expert freelance proposal writer.
+def analyze_job(job_desc):
+    analysis_prompt = f"""
+You are an expert freelance strategist.
 
-TASK:
-Write a HIGH-CONVERTING freelance proposal.
+Analyze this job and extract:
 
-INPUTS:
+1. What the client REALLY wants
+2. Hidden challenges (technical + business)
+3. Most critical tools/skills required
+4. How a freelancer can stand out
 
-Resume:
-{trim(resume)}
+Be concise, insightful, and practical.
 
 Job Description:
-{trim(job_desc)}
+{job_desc}
+"""
+    return model.invoke(analysis_prompt)
 
-Budget:
+
+def generate_proposal(resume, job_desc, analysis, tone, budget):
+    today = datetime.today().strftime("%B %d, %Y")
+
+    proposal_prompt = f"""
+You are ProposalPal, an elite freelance proposal writer.
+
+Job Analysis:
+{analysis}
+
+Freelancer Resume:
+{resume}
+
+Job Description:
+{job_desc}
+
+Client Budget:
 {budget if budget else "Not specified"}
 
-Tone:
-{tone}
+TONE: {tone}
 
-RULES:
-- Do NOT repeat job description
-- NO generic phrases like "I'm excited"
-- First 2 lines must be a strong hook (insight-based)
-- Be natural, human, persuasive
+STRICT RULES:
+
+- DO NOT repeat or rephrase the job description
+- NEVER say "I analyzed the job description"
+- Speak like a real freelancer, not AI
+- Be direct, confident, and natural
+- The first 2 lines MUST grab attention immediately
+- Avoid phrases like "I'm excited" or "I believe"
+- Show clear differentiation using skills/tools
 - Focus on outcomes, not tasks
+
+PRICING RULES:
+- If budget exists → align within or slightly below it
+- If no budget → estimate realistic mid-range pricing
+- NEVER output unrealistic numbers
+
+TIMELINE RULE:
+- Must be continuous (no gaps)
+- Start from today: {today}
 
 STRUCTURE:
 
-1. Hook (2-3 lines max, must be strong insight)
+1. Catchy Headline (max 3 lines, strong hook)
 
-2. Short Introduction (1 line, credible, human)
+2. Personal Introduction (1 line, human, credible)
 
-3. Understanding of Problem (real challenges, not repetition)
+3. Understanding the Problem
+- Identify real challenges (NOT repeating job post)
 
-4. Solution
+4. Proposed Solution
 - Objectives
-- Plan
-- Milestones (numbered tasks)
+- Clear execution plan
+- Milestones with numbered tasks
+- Measurable outcomes
 
 5. Timeline
-- Must start from today: {today}
-- Show clear milestone dates
+- Table format:
+Milestone | Start Date | End Date
 
 6. Pricing
-- Align with budget if provided
-- Otherwise realistic freelance pricing
-- Break per milestone + total
+- Cost per milestone
+- Total cost
+- Justify briefly
 
 7. Payment Schedule
-- Tied to milestones
+- Each payment within 1 week after milestone approval
 
-8. Terms
-- revisions, confidentiality, copyright, cancellation
+8. Terms and Conditions
+- Revisions
+- Confidentiality
+- Copyright
+- Dispute handling
+- Cancellation fee (30%)
 
-9. Closing CTA (1 strong sentence)
+ENDING:
+- Strong, natural call to action (1 sentence max)
+
+Make it sharp, persuasive, and client-focused.
 """
 
-    return call_groq(prompt)
+    return model.invoke(proposal_prompt)
 
-# -------------------------
-# BUTTON
-# -------------------------
-if st.button("🚀 Generate Proposal"):
+
+if st.button("🚀 Generate Winning Proposal"):
 
     if not resume or not job_desc:
         st.warning("Please fill in both Resume and Job Description.")
     else:
-        with st.spinner("Generating proposal..."):
-            proposal = generate_proposal(resume, job_desc, tone, budget)
+        with st.spinner("🧠 Analyzing job..."):
+            analysis = analyze_job(job_desc)
+
+        st.markdown("### 🧠 Job Insight")
+        st.markdown(analysis)
+
+        with st.spinner("✍️ Writing proposal..."):
+            proposal = generate_proposal(resume, job_desc, analysis, tone, budget)
 
         st.markdown("## 📬 Your Proposal")
         st.markdown(proposal)
