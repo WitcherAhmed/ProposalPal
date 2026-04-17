@@ -7,7 +7,7 @@ from datetime import datetime
 # -------------------------
 genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 
-model = genai.GenerativeModel("models/gemini-1.5-flash")
+model = genai.GenerativeModel("models/gemini-1.5-flash-latest")
 
 # -------------------------
 # PAGE CONFIG
