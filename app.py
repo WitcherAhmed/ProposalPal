@@ -2,16 +2,12 @@ import streamlit as st
 import google.generativeai as genai
 from datetime import datetime
 
-# -------------------------
-# CONFIGURE GEMINI
-# -------------------------
+
 genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 
 model = genai.GenerativeModel("models/gemini-2.5-flash")
 
-# -------------------------
-# PAGE CONFIG
-# -------------------------
+
 st.set_page_config(
     page_title="ProposalPal v5",
     page_icon="🚀",
@@ -20,15 +16,11 @@ st.set_page_config(
 
 st.title("🚀 ProposalPal - Gemini Powered")
 
-# -------------------------
-# HELPERS
-# -------------------------
+
 def trim(text, max_chars=4000):
     return text[:max_chars] if text else ""
 
-# -------------------------
-# INPUTS
-# -------------------------
+
 resume = st.text_area("📄 Paste Your Resume", height=200)
 job_desc = st.text_area("💼 Paste Job Description", height=200)
 
@@ -46,9 +38,7 @@ with col2:
         placeholder="e.g. $200 - $500"
     )
 
-# -------------------------
-# GENERATION
-# -------------------------
+
 def generate_proposal(resume, job_desc, tone, budget):
     today = datetime.today().strftime("%B %d, %Y")
 
@@ -111,9 +101,7 @@ STRUCTURE:
     response = model.generate_content(prompt)
     return response.text
 
-# -------------------------
-# BUTTON
-# -------------------------
+
 if st.button("🚀 Generate Proposal"):
 
     if not resume or not job_desc:
